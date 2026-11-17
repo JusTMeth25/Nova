@@ -25,6 +25,7 @@ Il frontend è in **React + TypeScript**, il backend in **Spring Boot**, i dati 
 - [Configurazione](#configurazione)
 - [API REST](#api-rest)
 - [Come funziona](#come-funziona)
+- [Deploy su Render](#deploy-su-render)
 - [Sicurezza](#sicurezza)
 - [Test](#test)
 
@@ -273,11 +274,25 @@ Non riprova per errori definitivi (chiave non valida, credito esaurito, modello 
 
 ---
 
+## Deploy su Render
+
+Il progetto si pubblica su [Render](https://render.com) con il Blueprint `render.yaml`: un unico servizio web Docker (il `Dockerfile` compila il frontend e lo include nel jar di Spring Boot, che lo serve sullo stesso dominio dell'API) e un database PostgreSQL gratuito.
+
+1. Apri [dashboard.render.com/blueprint/new?repo=https://github.com/JusTMeth25/Nova](https://dashboard.render.com/blueprint/new?repo=https://github.com/JusTMeth25/Nova) e accedi con GitHub.
+2. Inserisci il valore di `OPENROUTER_API_KEY` quando richiesto, poi conferma con **Deploy Blueprint**.
+3. Al termine della build il sito è raggiungibile all'indirizzo `https://<nome-servizio>.onrender.com`.
+
+Variabili usate in produzione: `PORT` e `RENDER_EXTERNAL_URL` (impostate da Render), `SERVER_ADDRESS=0.0.0.0` (nel `Dockerfile`), `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` (collegate al database dal Blueprint), `OPENROUTER_MODEL`, `OPENROUTER_API_KEY`.
+
+Limiti del piano gratuito: il servizio va in pausa dopo 15 minuti di inattività (la prima richiesta successiva impiega circa un minuto) e il database gratuito scade dopo 30 giorni.
+
+---
+
 ## Sicurezza
 
 - **Chiave API solo lato server**: letta dalla variabile d'ambiente `OPENROUTER_API_KEY`, mai salvata nel repository, mai inviata al browser e mascherata (`****`) se la configurazione finisce nei log.
 - **Nessuna chiamata diretta dal browser a OpenRouter**: il frontend usa solo `/api`, inoltrato da Vite al backend.
-- **Backend in ascolto solo su `127.0.0.1`**: non raggiungibile da altri dispositivi della rete.
+- **Backend in ascolto solo su `127.0.0.1`** in locale: non raggiungibile da altri dispositivi della rete (su Render ascolta su `0.0.0.0` perché deve essere pubblico).
 - **CORS** limitato all'indirizzo del frontend.
 - **Segreti locali esclusi da git**: `BE/env.properties` e i file `.env` del frontend.
 - **Output del modello sicuro**: il Markdown viene mostrato senza interpretare HTML, quindi una risposta non può inserire codice nella pagina.

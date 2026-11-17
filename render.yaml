@@ -1,0 +1,44 @@
+# Render Blueprint: one Docker web service (frontend + backend) and a PostgreSQL database.
+# Deploy: https://dashboard.render.com/blueprint/new?repo=https://github.com/JusTMeth25/Nova
+databases:
+  - name: nova-db
+    databaseName: nova
+    user: nova
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: nova
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/info
+    autoDeploy: true
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: nova-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: nova-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: nova-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: nova-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: nova-db
+          property: password
+      - key: OPENROUTER_MODEL
+        value: nvidia/nemotron-3-super-120b-a12b:free
+      - key: OPENROUTER_API_KEY
+        sync: false

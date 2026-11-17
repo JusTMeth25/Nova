@@ -1,0 +1,7 @@
+.git
+**/node_modules
+FE/dist
+BE/target
+BE/env.properties
+docs
+*.cmd
