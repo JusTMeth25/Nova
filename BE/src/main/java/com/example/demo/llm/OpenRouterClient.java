@@ -83,13 +83,21 @@ public class OpenRouterClient {
 		for (String model : models) {
 			for (int retry = 0; retry <= properties.maxRetries(); retry++) {
 				if (lastFailure != null) {
-					onRetry.accept(retryNote(model, firstModel, retry));
+					onRetry.accept(lastFailure.isModelUnavailable()
+							? "Il modello principale non è disponibile: provo con " + shortName(model) + "…"
+							: retryNote(model, firstModel, retry));
 					pause(properties.retryBackoff().multipliedBy(Math.max(1, retry)));
 				}
 				attempts++;
 				try {
 					return streamOnce(model, messages, trackedDelta);
 				} catch (LlmException e) {
+					if (e.isModelUnavailable() && !textSent[0]) {
+						// Model removed or renamed on OpenRouter: go straight to the next model
+						log.warn("Model {} is not available: {}", model, e.getMessage());
+						lastFailure = e;
+						break;
+					}
 					if (!e.isRetryable() || textSent[0]) {
 						throw e;
 					}
@@ -100,6 +108,9 @@ public class OpenRouterClient {
 			firstModel = false;
 		}
 
+		if (lastFailure.isModelUnavailable()) {
+			throw lastFailure;
+		}
 		throw new LlmException(
 				"I server dei modelli AI sono sovraccarichi in questo momento (" + attempts
 						+ " tentativi falliti). Riprova tra qualche minuto.",
@@ -191,8 +202,12 @@ public class OpenRouterClient {
 				intOrNull(usage, "total_tokens"));
 	}
 
+	private static String shortName(String model) {
+		return model.substring(model.lastIndexOf('/') + 1).replace(":free", "");
+	}
+
 	private static String retryNote(String model, boolean firstModel, int retry) {
-		String name = model.substring(model.lastIndexOf('/') + 1).replace(":free", "");
+		String name = shortName(model);
 		if (retry == 0) {
 			return "Il modello principale è sovraccarico: provo con " + name + "…";
 		}

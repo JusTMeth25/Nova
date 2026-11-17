@@ -92,7 +92,7 @@ Il browser non comunica mai direttamente con OpenRouter e non riceve mai la chia
 | Frontend | React 19, TypeScript 6, Vite 8, React Router, react-markdown + remark-gfm + rehype-highlight, lucide-react, CSS puro |
 | Backend | Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Validation), Lombok, `java.net.http.HttpClient`, Jackson 3 |
 | Database | PostgreSQL |
-| AI | OpenRouter (API compatibile OpenAI), modello `nvidia/nemotron-3-super-120b-a12b:free` con reasoning attivo |
+| AI | OpenRouter (API compatibile OpenAI), modello `nvidia/nemotron-3-ultra-550b-a55b:free` con reasoning attivo |
 
 ---
 
@@ -162,7 +162,7 @@ copy BE\env.properties.example BE\env.properties
 DB_URL=jdbc:postgresql://localhost:5432/U5W6D3
 DB_USERNAME=postgres
 DB_PASSWORD=la-tua-password
-OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
+OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
 ```
 
 `env.properties` è escluso da git.
@@ -205,7 +205,7 @@ Le proprietà si trovano in `BE/src/main/resources/application.properties` e pos
 | Proprietà | Default | Descrizione |
 |---|---|---|
 | `openrouter.model` | da `OPENROUTER_MODEL` | Modello principale |
-| `openrouter.fallback-models` | `nvidia/nemotron-3-ultra-550b-a55b:free` | Modelli di riserva, separati da virgola (variabile `OPENROUTER_FALLBACK_MODELS`) |
+| `openrouter.fallback-models` | `nvidia/nemotron-3.5-super-vl:free,nvidia/nemotron-3.5-lightning:free` | Modelli di riserva, separati da virgola (variabile `OPENROUTER_FALLBACK_MODELS`) |
 | `openrouter.max-retries` | `2` | Tentativi extra sullo stesso modello per errori temporanei |
 | `openrouter.retry-backoff` | `1500ms` | Attesa di base tra un tentativo e l'altro (cresce a ogni tentativo) |
 | `openrouter.reasoning-enabled` | `true` | Il modello ragiona prima di rispondere; all'utente arriva solo la risposta finale |

@@ -14,14 +14,22 @@ public class LlmException extends RuntimeException {
 	/** True for temporary problems (overload, rate limit, timeout) worth trying again */
 	private final boolean retryable;
 
+	/** True when the model does not exist (anymore): retrying it is useless, but a fallback model may work */
+	private final boolean modelUnavailable;
+
 	public LlmException(String userMessage, int httpStatus) {
 		this(userMessage, httpStatus, false, null);
 	}
 
 	public LlmException(String userMessage, int httpStatus, boolean retryable, Throwable cause) {
+		this(userMessage, httpStatus, retryable, false, cause);
+	}
+
+	private LlmException(String userMessage, int httpStatus, boolean retryable, boolean modelUnavailable, Throwable cause) {
 		super(userMessage, cause);
 		this.httpStatus = httpStatus;
 		this.retryable = retryable;
+		this.modelUnavailable = modelUnavailable;
 	}
 
 	static LlmException fromStatus(int status) {
@@ -29,7 +37,7 @@ public class LlmException extends RuntimeException {
 			case 400 -> new LlmException("La richiesta al servizio AI non è valida. Controlla il modello configurato.", 502);
 			case 401, 403 -> new LlmException("Chiave API del servizio AI non valida o non autorizzata.", 502);
 			case 402 -> new LlmException("Credito del servizio AI esaurito.", 502);
-			case 404 -> new LlmException("Il modello AI configurato non esiste o non è disponibile.", 502);
+			case 404 -> new LlmException("Il modello AI configurato non esiste o non è disponibile.", 502, false, true, null);
 			case 408 -> new LlmException("Il servizio AI ha impiegato troppo tempo a rispondere. Riprova.", 504, true, null);
 			case 429 -> new LlmException("Troppe richieste al servizio AI. Attendi qualche secondo e riprova.", 503, true, null);
 			default -> status >= 500

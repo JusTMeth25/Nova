@@ -130,6 +130,30 @@ class OpenRouterClientTest {
 	}
 
 	@Test
+	void skipsToFallbackModelWhenModelDoesNotExist() {
+		responses.add(new Scripted(404, "{\"error\":{\"message\":\"No endpoints found\"}}"));
+		responses.add(new Scripted(200, SUCCESS));
+		List<String> notes = new ArrayList<>();
+
+		StreamResult result = client(2, List.of("vendor/backup:free")).streamChat(CONTEXT, t -> { }, notes::add);
+
+		assertThat(result.content()).isEqualTo("Ciao Lorenzo");
+		assertThat(requestedModels).containsExactly("main", "vendor/backup:free");
+		assertThat(notes).singleElement().asString().contains("non è disponibile").contains("backup");
+	}
+
+	@Test
+	void reportsMissingModelWhenNoModelExists() {
+		responses.add(new Scripted(404, "{}"));
+		responses.add(new Scripted(404, "{}"));
+
+		assertThatThrownBy(() -> client(2, List.of("backup")).streamChat(CONTEXT, t -> { }, n -> { }))
+				.isInstanceOf(LlmException.class)
+				.hasMessageContaining("non esiste");
+		assertThat(requestedModels).containsExactly("main", "backup");
+	}
+
+	@Test
 	void doesNotRetryOnceTextReachedTheUser() {
 		responses.add(new Scripted(200,
 				"data: {\"choices\":[{\"delta\":{\"content\":\"Ciao\"}}]}\n\n" + OVERLOADED));
